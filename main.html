@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CORES EA FC 26 World Cup</title>
+<link rel="icon" type="image/x-icon" href="./images/cores.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- CSS -->
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ... */
+</style>
+
+</head>
+
+<body>
+
+<div class="field-lines"></div>
+
+<header>
+  <div class="brand">
+    <img class="brand-mark" src="./images/cores.png">
+    <div class="brand-text">
+      <div class="t1">CORES Presents</div>
+      <div class="t2">CORES EA FC 26 World Cup</div>
+    </div>
+  </div>
+  <nav id="mainNav">
+    <button data-page="overview" class="active">Overview</button>
+    <button data-page="groups">Group Stage</button>
+    <button data-page="about">About Us</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ================= PAGE 1: OVERVIEW ================= -->
+  <section class="page active" id="page-overview">
+    <div class="hero-top">
+      <div class="eyebrow">CORES · 2026 World Cup Edition · PS5 Platform</div>
+      <h1 class="page-title">32 players.<br>One <em>CORES</em> champion.</h1>
+      <p class="page-sub">The Corporate & Engineering Services EA FC 26 World Cup Competition. Every player from multiple department within CORES, in 8 groups, one shared PS5 to settle it all.</p>
+    </div>
+
+    <div class="slideshow">
+      <div class="slide-track" id="slideTrack"></div>
+      <div class="slide-controls">
+        <div class="dots" id="dots"></div>
+        <div class="arrows">
+          <button id="prevBtn" aria-label="Previous player">&#8592;</button>
+          <button id="nextBtn" aria-label="Next player">&#8594;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="roster-strip" id="rosterStrip"></div>
+
+    <div class="stat-row">
+      <div class="stat-card"><div class="num">D&I | CORES</div><div class="lbl">Multiple Unit</div></div>
+      <div class="stat-card"><div class="num">32</div><div class="lbl">Players Registered</div></div>      
+      <div class="stat-card"><div class="num">4</div><div class="lbl">Players per Group</div></div>
+      <div class="stat-card"><div class="num">PS5</div><div class="lbl">Platform</div></div>
+    </div>
+  </section>
+
+  <!-- ================= PAGE 2: GROUP STAGE ================= -->
+  <section class="page" id="page-groups">
+    <div class="eyebrow">Standings</div>
+    <h1 class="page-title">Group <em>stage</em></h1>
+    <p class="page-sub">Round robin within each group. Top 2 from every group advance to the knockout semi-finals — highlighted below.</p>
+
+    <div class="embed-panel">
+      <div class="embed-head"><h3>Standings</h3><span>Live · score7.io</span></div>
+      <div class="embed-frame">
+        <iframe width="100%" height="100%" src="https://www.score7.io/embed/tournaments/coresfc26worldcup/standings/44550006?showName=true&theme=auto" title="CORES EA FC 26 World Cup — Standings" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <div class="fixtures-title">Fixtures &amp; results</div>
+    <div class="embed-panel">
+      <div class="embed-frame embed-frame-tall">
+        <iframe width="100%" height="100%" src="https://www.score7.io/embed/tournaments/coresfc26worldcup/stages/44550006?showName=true&theme=auto" title="CORES EA FC 26 World Cup — Group Stage" loading="lazy"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PAGE 3: ABOUT ================= -->
+  <section class="page" id="page-about">
+    <div class="eyebrow">Who's behind this</div>
+    <h1 class="page-title">About <em>CORES</em></h1>
+
+    <div class="about-grid">
+      <div class="about-copy">
+        <p><strong>Corporate & Engineering Services (CORES)</strong> keeps the business running — facilities, workplace experience, corporate security, health &amp; safety, and vendor management all sit under one roof. We build the environment everyone else works in.</p>
+        <p>This championship started as a lunchtime debate about squad-building and turned into our department's first proper tournament. It's not about the console — it's an excuse to get engineering, facilities, and admin in the same room, arguing about formations instead of floor plans.</p>
+        <p>Every match is played on a single shared PS5 station, one controller, no excuses. Results feed straight into the live group tables on the previous page.</p>
+      </div>
+      <div class="pillars">
+        <div class="pillar">
+          <div class="icon">🏆</div>
+          <div><h4>Fair play, one console</h4><p>Every fixture is played on the same PS5 and controller set — no home advantage.</p></div>
+        </div>
+        <div class="pillar">
+          <div class="icon">🤝</div>
+          <div><h4>Cross-team bonding</h4><p>Squads are drawn from every corner of CORES, not just one team.</p></div>
+        </div>
+        <div class="pillar">
+          <div class="icon">📋</div>
+          <div><h4>Open standings</h4><p>Group tables update after every fixture and are visible to the whole department.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="committee-title">Organizing committee</div>
+    <div class="committee-grid" id="committeeGrid"></div>
+
+    <div class="contact-panel">
+      <div>
+        <h3>Want to get involved?</h3>
+        <p>Reach the organizing committee through link below to know the competittion details. #OneWorldOneGame</p>
+      </div>
+      <div class="tag"><a href="https://www.score7.io/tournaments/coresfc26worldcup/overview">Official Dashboard CORES EA FC 26 World Cup</a></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>CORES EA FC 26 CHAMPIONSHIP · 2026 · INTERNAL DEPARTMENT EVENT</footer>
+
+<script src="script.js" defer></script> 
+
+<script>
+// ...
+</script>
+
+</body>
+</html>
