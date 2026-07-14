@@ -22,11 +22,100 @@ const IMAGE_BASE_PATH = './images/players/';
 const IMAGE_EXTENSION = '.png';
 
 // Generates an illustrated portrait per player (seeded on their gamertag, so it's
-// stable across reloads). Swap any player's "photo" field for a real headshot URL
-// once you have one — e.g. photo: "https://yourcompany.com/staff/aiden-cross.jpg"
-function portraitFor(gamertag){
-//   return `https://api.dicebear.com/9.x/personas/svg?seed=${encodeURIComponent(seed)}&backgroundType=gradientLinear`;
-  return `${IMAGE_BASE_PATH}${gamertag}${IMAGE_EXTENSION}`;
+// stable across reloads). Used only as a FALLBACK if no local photo file is found —
+// see LOCAL PHOTO MAPPING below for how real local images are picked up.
+function portraitFor(seed){
+  return `https://api.dicebear.com/9.x/personas/svg?seed=${encodeURIComponent(seed)}&backgroundType=gradientLinear`;
+}
+
+// function portraitFor(gamertag){
+// //   return `https://api.dicebear.com/9.x/personas/svg?seed=${encodeURIComponent(seed)}&backgroundType=gradientLinear`;
+//   return `${IMAGE_BASE_PATH}${gamertag}${IMAGE_EXTENSION}`;
+// }
+
+/* ------------------------------------------------------------------------
+   LOCAL PHOTO MAPPING
+   ------------------------------------------------------------------------
+   Photos are pulled from local folders next to this HTML file, matched by
+   filename. If a local file is missing, the <img> automatically falls back
+   to the generated portrait (portraitFor) so the dashboard never breaks.
+
+   Folder layout expected (create these next to the .html file):
+
+     player-photos/
+       A.CROSS1.jpg       <- named exactly after the player's gamertag
+       P.NAIR2.jpg
+       ...
+
+     committee-photos/
+       farah-idris.jpg    <- named after a slug of the member's full name
+       grace-mwangi.jpg
+       ...
+
+   Accepted image extensions are tried in order: jpg, jpeg, png, webp.
+   To point a specific player/committee member at a different filename or a
+   remote URL instead, just set that person's "photo" field directly in the
+   data below — an explicit "photo" always wins over the local-folder lookup.
+   ------------------------------------------------------------------------ */
+
+const LOCAL_PLAYER_DIR = 'media/players';
+const LOCAL_COMMITTEE_DIR = 'media/committee';
+const LOCAL_PHOTO_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
+
+function slugify(name){
+  return name
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // strip accents
+    .toLowerCase()
+    .replace(/'/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+// Builds the ordered list of candidate local paths to try for a given base filename
+// (gamertag for players, slug for committee), e.g. ["player-photos/A.CROSS1.jpg", ...]
+function localPhotoCandidates(dir, baseName){
+  return LOCAL_PHOTO_EXTENSIONS.map(ext => `${dir}/${baseName}.${ext}`);
+}
+
+// Wires an <img> (already in the DOM) to try each local candidate in turn, then
+// the generated portrait, and — if even that fails to load (e.g. offline) —
+// swaps the <img> out for an initials tile so it's never left blank/broken.
+// Called from an inline onerror="nextPhotoSrc(this)" attribute on the <img> tag.
+function nextPhotoSrc(img){
+  const candidates = JSON.parse(img.dataset.candidates || '[]');
+  const idx = parseInt(img.dataset.idx || '0', 10) + 1;
+  if(idx < candidates.length){
+    img.dataset.idx = idx;
+    img.src = candidates[idx];
+    return;
+  }
+  if(img.dataset.fallbackTried !== '1'){
+    // local files exhausted — try the generated portrait once
+    img.dataset.fallbackTried = '1';
+    img.onerror = function(){ showInitialsFallback(img); };
+    img.src = img.dataset.fallback;
+    return;
+  }
+  showInitialsFallback(img);
+}
+
+// Final fallback: no local file and the generated portrait couldn't load either
+// (e.g. no internet access) — show the person's initials instead of a blank image.
+function showInitialsFallback(img){
+  const name = img.dataset.name || '';
+  const initialsText = name.split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const size = img.dataset.size;
+  const fill = img.dataset.fill === '1';
+  const tile = document.createElement('div');
+  tile.className = 'avatar-tile';
+  tile.textContent = initialsText;
+  tile.style.background = img.dataset.bg;
+  if(fill){
+    tile.style.cssText += `position:absolute;inset:0;width:100%;height:100%;border-radius:0;font-size:64px;`;
+  } else {
+    tile.style.cssText += `width:${size}px;height:${size}px;font-size:${Math.round(size * 0.35)}px;`;
+  }
+  img.replaceWith(tile);
 }
 
 // Each CORES department fields one squad of 4 = one group (A–H).
@@ -71,23 +160,24 @@ const players = [
   { name:"Shaiful Rizal",      gamertag:"shaifulr",   number:30, dept:"CORES/CSAD",    country:"Uruguay",   flag:"Montevideo", iso2:"uy",        group:"H" },
   { name:"Luqman Harriz",     gamertag:"Manwest",   number:31, dept:"CORES/CSAD",      country:"Brazil",   flag:"Brasília", iso2:"br",       group:"H" },
   { name:"Ikhwan Kamarudin",  gamertag:"Khwan", number:32, dept:"CORES/CSAD",     country:"Croatia",   flag:"Zagreb", iso2:"hr",   group:"H" }
-].map(p => ({ ...p, photo: p.photo || portraitFor(p.gamertag) }));
+].map(p => ({
+  ...p,
+  localCandidates: p.localCandidates || localPhotoCandidates(LOCAL_PLAYER_DIR, p.gamertag),
+  photo: p.photo || portraitFor(p.gamertag)
+}));
+  // ].map(p => ({ ...p, photo: p.photo || portraitFor(p.gamertag) }));
 
 const committee = [
   { name:"Ihsan",         gamertag:"san",   role:"Football Manager 1" },
   { name:"Amirrul",        gamertag:"mirrul",   role:"Football Manager 2" },
   { name:"Jarmin",        gamertag:"jarmin",   role:"Referree" },
   { name:"Safuan",       gamertag:"powe",   role:"Medical Officer" },
-//   { name:"Tom Baxter",          gamertag:"zul-3",   role:"IT & Console Setup" },
-//   { name:"Hassan Al-Sayed",     gamertag:"zul-3",   role:"Referee Lead" },
-//   { name:"Elena Vasquez",       gamertag:"zul-3",   role:"Broadcast & Streaming" },
-//   { name:"Connor Whitfield",    gamertag:"zul-3",   role:"Prize & Sponsorship" },
-//   { name:"Meera Iyer",          gamertag:"zul-3",   role:"Facilities Coordinator" },
-//   { name:"Patrick Nguyen",      gamertag:"zul-3",   role:"Health & Safety Officer" },
-//   { name:"Astrid Johansson",    gamertag:"zul-3",   role:"Finance & Budget" },
-//   { name:"Jamal Thompson",      gamertag:"zul-3",   role:"Volunteer Coordinator" },
-//   { name:"Ling Zhou",           gamertag:"zul-3",   role:"Photography & Media" }
-].map(c => ({ ...c, photo: c.photo || portraitFor(c.gamertag) }));
+].map(c => ({
+  ...c,
+  localCandidates: c.localCandidates || localPhotoCandidates(LOCAL_COMMITTEE_DIR, slugify(c.gamertag)),
+  photo: c.photo || portraitFor(c.gamertag)
+}));
+// ].map(c => ({ ...c, photo: c.photo || portraitFor(c.gamertag) }));
 
 /* ============================================================
    RENDER LOGIC — no need to touch below this line
@@ -102,14 +192,22 @@ function avatarHTML(player, idx, size){
     const ring = size >= 100
       ? `border:3px solid rgba(255,255,255,0.15);box-shadow:0 0 0 8px rgba(255,255,255,0.03);`
       : `border:2px solid rgba(255,255,255,0.12);`;
-    return `<img src="${player.photo}" alt="${player.gamertag}" onerror="this.onerror=null; this.parentElement.innerHTML='${initials(player.name)}';" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;${ring}position:relative;z-index:1;background:var(--bg-panel-2);">`;
+    const candidates = player.localCandidates || [];
+    const initialSrc = candidates.length ? candidates[0] : player.photo;
+    const onerror = `onerror="nextPhotoSrc(this)"`;
+    const dataAttrs = `data-candidates='${JSON.stringify(candidates)}' data-idx="0" data-fallback="${player.photo}" data-name="${player.name}" data-bg="${avatarStyle(idx)}" data-size="${size}"`;
+    return `<img src="${initialSrc}" ${dataAttrs} ${onerror} alt="${player.name}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;${ring}position:relative;z-index:1;background:var(--bg-panel-2);">`;
   }
   return `<div class="avatar-tile" style="background:${avatarStyle(idx)};width:${size}px;height:${size}px;font-size:${size*0.35}px;">${initials(player.name)}</div>`;
 }
 // Large slideshow portrait — fills the .slide-photo container edge-to-edge (not circular).
 function mainPhotoHTML(player, idx){
   if(player.photo){
-    return `<img class="main-photo" src="${player.photo}" alt="${player.gamertag}">`;
+    const candidates = player.localCandidates || [];
+    const initialSrc = candidates.length ? candidates[0] : player.photo;
+    const onerror = `onerror="nextPhotoSrc(this)"`;
+    const dataAttrs = `data-candidates='${JSON.stringify(candidates)}' data-idx="0" data-fallback="${player.photo}" data-name="${player.name}" data-bg="${avatarStyle(idx)}" data-fill="1"`;
+    return `<img class="main-photo" src="${initialSrc}" ${dataAttrs} ${onerror} alt="${player.name}">`;
   }
   return `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">${avatarHTML(player, idx, 150)}</div>`;
 }
@@ -160,7 +258,7 @@ players.forEach((p, i) => {
   thumb.className = 'roster-thumb' + (i === 0 ? ' active' : '');
   thumb.innerHTML = `
     ${avatarHTML(p, i, 55)}
-    <div class="mini-name"><div style="font-size:11px">${p.gamertag}</div></div>
+    <div class="mini-name" style="font-size:10px">${p.gamertag}</div>
     <div class="group-badge"><span class="dot" style="background:${groupColor}"></span><div style="font-size:10px">Group ${p.group}</div></div>
   `;
   thumb.addEventListener('click', () => goTo(i));
