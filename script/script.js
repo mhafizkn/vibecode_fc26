@@ -370,7 +370,7 @@ committee.forEach((c,i) => {
     <div class="crole">${c.role}</div>
   `;
   committeeGrid.appendChild(card);
-  attachHoverPreview(card, c.name);
+  attachHoverPreview(card, `${c.gamertag} · ${c.name}`);
 });
 
 // ---- Nav switching ----
