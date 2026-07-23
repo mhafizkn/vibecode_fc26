@@ -2,9 +2,6 @@
    EDIT ZONE — swap in your real players, photos, and results
    ============================================================ */
 
-// import { players } from './players.js';
-// import { committee } from './committee.js';
-
 // Palette used to auto-color avatar tiles (cycled per player)
 const PALETTE = [
   'linear-gradient(135deg,#5cf03c,#2c6b1f)',
@@ -30,11 +27,6 @@ const IMAGE_EXTENSION = '.png';
 function portraitFor(seed){
   return `https://api.dicebear.com/9.x/personas/svg?seed=${encodeURIComponent(seed)}&backgroundType=gradientLinear`;
 }
-
-// function portraitFor(gamertag){
-// //   return `https://api.dicebear.com/9.x/personas/svg?seed=${encodeURIComponent(seed)}&backgroundType=gradientLinear`;
-//   return `${IMAGE_BASE_PATH}${gamertag}${IMAGE_EXTENSION}`;
-// }
 
 /* ------------------------------------------------------------------------
    LOCAL PHOTO MAPPING
@@ -169,11 +161,6 @@ const players = [
   photo: p.photo || portraitFor(p.gamertag)
 }));
 
-// players.map(p => ({
-//   ...p,
-//   localCandidates: p.localCandidates || localPhotoCandidates(LOCAL_PLAYER_DIR, p.gamertag),
-//   photo: p.photo || portraitFor(p.gamertag)
-// }));
 
 const committee = [  
   { name:"Ahmad Hafifi",             gamertag:"fifisr",     role:"Advisor" },
@@ -232,6 +219,73 @@ function mainPhotoHTML(player, idx){
   return `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">${avatarHTML(player, idx, 150)}</div>`;
 }
 
+// ---- Hover sneak-peek preview ----
+// Shows a floating full-size preview of a player/committee photo near the
+// cursor when hovering over a thumbnail. Skipped entirely on touch devices
+// (no real hover), so it never gets "stuck" open after a tap.
+const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+const hoverPreview = document.getElementById('hoverPreview');
+const hoverPreviewMedia = document.getElementById('hoverPreviewMedia');
+const hoverPreviewCaption = document.getElementById('hoverPreviewCaption');
+
+function positionHoverPreview(e){
+  const margin = 18;
+  const panelW = hoverPreview.offsetWidth || 260;
+  const panelH = hoverPreview.offsetHeight || 300;
+  let x = e.clientX + margin;
+  let y = e.clientY + margin;
+  if(x + panelW > window.innerWidth - 10) x = e.clientX - panelW - margin;
+  if(y + panelH > window.innerHeight - 10) y = window.innerHeight - panelH - 10;
+  if(y < 10) y = 10;
+  hoverPreview.style.left = x + 'px';
+  hoverPreview.style.top = y + 'px';
+}
+
+// Builds the preview content by mirroring whatever the thumbnail is actually
+// showing RIGHT NOW — a successfully-loaded photo, or (if every photo source
+// failed) the initials tile — rather than re-guessing a file path that might
+// not exist. Returns true if there's something to show.
+function fillHoverPreview(el){
+  hoverPreviewMedia.innerHTML = '';
+  const img = el.querySelector('img');
+  if(img && img.naturalWidth > 0){
+    const big = document.createElement('img');
+    big.src = img.currentSrc || img.src;
+    big.alt = img.alt || '';
+    hoverPreviewMedia.appendChild(big);
+    return true;
+  }
+  const tile = el.querySelector('.avatar-tile');
+  if(tile){
+    const bigTile = document.createElement('div');
+    bigTile.className = 'preview-tile';
+    bigTile.style.background = tile.style.background;
+    bigTile.textContent = tile.textContent;
+    hoverPreviewMedia.appendChild(bigTile);
+    return true;
+  }
+  return false;
+}
+
+// Attaches hover-to-preview behavior to a thumbnail element. Re-checks the
+// element's current photo/initials state on every hover, so it stays correct
+// even if a photo finishes loading (or falls back) after page load.
+function attachHoverPreview(el, caption){
+  if(!supportsHover) return;
+  el.addEventListener('mouseenter', (e) => {
+    if(!fillHoverPreview(el)) return;
+    hoverPreviewCaption.textContent = caption || '';
+    hoverPreview.classList.add('visible');
+    positionHoverPreview(e);
+  });
+  el.addEventListener('mousemove', (e) => {
+    if(hoverPreview.classList.contains('visible')) positionHoverPreview(e);
+  });
+  el.addEventListener('mouseleave', () => {
+    hoverPreview.classList.remove('visible');
+  });
+}
+
 // ---- Page 1: slideshow ----
 let current = 0;
 const track = document.getElementById('slideTrack');
@@ -283,6 +337,7 @@ players.forEach((p, i) => {
   `;
   thumb.addEventListener('click', () => goTo(i));
   rosterStrip.appendChild(thumb);
+  attachHoverPreview(thumb, `${p.gamertag} · ${p.name}`);
 });
 
 const slideEls = document.querySelectorAll('.slide');
@@ -315,6 +370,7 @@ committee.forEach((c,i) => {
     <div class="crole">${c.role}</div>
   `;
   committeeGrid.appendChild(card);
+  attachHoverPreview(card, c.name);
 });
 
 // ---- Nav switching ----
